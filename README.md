@@ -1,4 +1,4 @@
-# CircleCIでスタックをデプロイするリージョンを環境変数として設定する手順
+# CircleCIにリージョンを環境変数として設定する手順
 1. CircleCIにログインする。
 2. 左サイドバーの「Projects」をクリックする。
 3. 対象のプロジェクトにある「・・・」をクリックする。
@@ -8,3 +8,6 @@
 7. 「Add Enviroment Variable」をクリックする。
 
 ※アクセスキーは「Name」に`AWS_ACCESS_KEY_ID`、シークレットアクセスキーは「Name」に`AWS_SECRET_ACCESS_KEY`を設定して、それに対応する「Value」を設定することで登録できる。
+
+# CircleCIでスタックをデプロイする手順
+1. IAMポリシーをアタッチする。
