@@ -8,11 +8,12 @@
 7. 「Add Enviroment Variable」をクリックする。
 
 ## 「Name」に設定するものの例
-リージョン　`AWS_REGION`
-
-アクセスキー　`AWS_ACCESS_KEY_ID`
-
-シークレットアクセスキー　`AWS_SECRET_ACCESS_KEY`
+### リージョン
+AWS_REGION
+### アクセスキー
+AWS_ACCESS_KEY_ID
+### シークレットアクセスキー
+AWS_SECRET_ACCESS_KEY
 
 # CircleCIでスタックをデプロイする手順
 1. 上記の「CircleCIに環境変数を設定する手順」に沿ってスタックをデプロイしたいリージョンを登録する。
