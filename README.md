@@ -169,3 +169,7 @@ CircleCIは`.circleci/config.yml`で出力がない状態が10分を経過する
 具体的にジョブがどのように実行されるのかを指定する場所。
 ### `requires:`
 このセクション内に書かれた処理が終わったタイミングで`requires:`の一つ上の行の処理が実行される。
+
+# Ansibleのインストール手順
+1. Ubuntuで`sudo apt update`を実行する。
+2. `sudo apt install ansible`を実行する。
