@@ -138,4 +138,17 @@ Pythonでいうライブラリのようなもの。
 このブロック内に書いた内容をプログラムコードの他の行で再利用可能にしてくれるもの。ブロック内で書いた内容を他の行で利用するときは`executors`ではなく、`executor`と書くことに注意する。
 ### `- image: circleci/python:3.10`
 CircleCIがジョブを実行するための環境であるDockerイメージを指定する。Dockerイメージはアプリケーションと実行環境をパッケージ化するためのテンプレート。
+### `steps:`
+このブロック内で書かれた内容は上から順番に実行される。
+### `checkout`
+リポジトリのコードを読み取るためのもの。
+### `aws-cli/install`
+コマンドラインからAWSを操作するために必要なAWS CLIをインストール。
+### `name: Deploy CloudFormation VPC Stack`
+以下の写真のようにCircleCI上から確認することができる処理名。自由につけて良い。
+
+![スクリーンショット 2023-10-14 115427](https://github.com/Hidetaka-Konishi/Raise_AWS_13/assets/142459457/efce98d3-7606-407d-acbd-d6183b71584d)
+
+### `aws cloudformation deploy \`
+スタックをデプロイすることを定義している。
 
