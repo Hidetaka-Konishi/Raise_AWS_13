@@ -27,3 +27,111 @@
 10. `git commit -m "任意のメッセージ"`を実行する。
 11. `git push origin [ブランチ名]`を実行する。
 12. CircleCIにログインするとスタックが作成中であることが確認できる。
+
+# CircleCIからスタックをデプロイする`config.yml`ファイルのコード解説
+## ソースコード
+```yaml
+version: 2.1
+
+orbs:
+  aws-cli: circleci/aws-cli@4.0
+
+executors:
+  my-executor:
+    docker:
+      - image: circleci/python:3.10
+
+jobs:
+  deploy-vpc:
+    executor: my-executor
+    steps:
+      - checkout
+      - aws-cli/install
+      - run:
+          name: Deploy CloudFormation VPC Stack
+          command: |
+            aws cloudformation deploy \
+              --template-file cloudformation/picture-upload-vpc.yml \
+              --stack-name raise13-vpc \
+              --parameter-overrides Prefix=raise13-vpc
+
+  deploy-ec2:
+    executor: my-executor
+    steps:
+      - checkout
+      - aws-cli/install
+      - run:
+          name: Deploy CloudFormation EC2 Stack
+          command: |
+            aws cloudformation deploy \
+              --template-file cloudformation/picture-upload-ec2.yml \
+              --stack-name raise13-ec2 \
+              --parameter-overrides Prefix=raise13-ec2 VPCPrefix=raise13-vpc
+
+  deploy-rds:
+    executor: my-executor
+    steps:
+      - checkout
+      - aws-cli/install
+      - run:
+          name: Deploy CloudFormation RDS Stack
+          command: |
+            aws cloudformation deploy \
+              --template-file cloudformation/picture-upload-rds.yml \
+              --stack-name raise13-rds \
+              --parameter-overrides Prefix=raise13-rds VPCPrefix=raise13-vpc EC2Prefix=raise13-ec2
+          no_output_timeout: 20m
+
+  deploy-alb:
+    executor: my-executor
+    steps:
+      - checkout
+      - aws-cli/install
+      - run:
+          name: Deploy CloudFormation ALB Stack
+          command: |
+            aws cloudformation deploy \
+              --template-file cloudformation/picture-upload-alb.yml \
+              --stack-name raise13-alb \
+              --parameter-overrides Prefix=raise13-alb VPCPrefix=raise13-vpc EC2Prefix=raise13-ec2
+
+  deploy-s3:
+    executor: my-executor
+    steps:
+      - checkout
+      - aws-cli/install
+      - run:
+          name: Deploy CloudFormation S3 Stack
+          command: |
+            aws cloudformation deploy \
+              --template-file cloudformation/picture-upload-s3.yml \
+              --stack-name raise13-s3 \
+              --parameter-overrides Prefix=raise13-s3
+
+workflows:
+  version: 2
+  deploy:
+    jobs:
+      - deploy-vpc
+      - deploy-ec2:
+          requires:
+            - deploy-vpc
+      - deploy-rds:
+          requires:
+            - deploy-ec2
+      - deploy-alb:
+          requires:
+            - deploy-rds
+      - deploy-s3:
+          requires:
+            - deploy-alb
+```
+
+## 解説
+### `version: 2.1`
+CircleCIの設定ファイルのバージョン
+### `orbs:`
+特定の機能をインポートするために必要。Pythonでいう`import`のようなもの。
+### `aws-cli: circleci/aws-cli@4.0`
+Pythonでいうライブラリのようなもの。
+
