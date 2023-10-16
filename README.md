@@ -173,3 +173,7 @@ CircleCIは`.circleci/config.yml`で出力がない状態が10分を経過する
 # Ansibleのインストール手順
 1. Ubuntuで`sudo apt update`を実行する。
 2. `sudo apt install ansible`を実行する。
+
+# 良く使うコマンド
+## Ansibleプレイブックの構文チェック
+`ansible-playbook -i inventry ファイル名.yml --syntax-check`
