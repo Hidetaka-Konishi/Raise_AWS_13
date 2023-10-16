@@ -177,3 +177,6 @@ CircleCIは`.circleci/config.yml`で出力がない状態が10分を経過する
 # 良く使うコマンド
 ## Ansibleプレイブックの構文チェック
 `ansible-playbook -i inventry ファイル名.yml --syntax-check`
+## Ansibleプレイブックを実行して上手くいかなかった原因の詳細ログを知りたいとき
+`ansible-playbook -i [インベントリのファイル名].ini [プレイブックのファイル名].yml -vvv`
+
