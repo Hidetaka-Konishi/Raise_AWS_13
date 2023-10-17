@@ -184,7 +184,7 @@ CircleCIは`.circleci/config.yml`で出力がない状態が10分を経過する
 ## Ubuntuからプレイブックの実行
 `ansible-playbook -i [インベントリのファイル名].ini [プレイブックのファイル名].yml --key-file="/home/[ubuntuのユーザ名]/[pemのファイル名].pem"`
 ## プレイブックの構文チェック
-`ansible-playbook -i inventry ファイル名.yml --syntax-check`
+`ansible-playbook -i [インベントリのファイル名].ini [プレイブックのファイル名].yml --syntax-check`
 ## プレイブックを実行して上手くいかなかった原因の詳細ログを知りたいとき
 `ansible-playbook -i [インベントリのファイル名].ini [プレイブックのファイル名].yml -vvv`
 
