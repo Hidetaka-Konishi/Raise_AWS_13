@@ -1,4 +1,4 @@
-# CircleCIに環境変数を設定する手順
+# CircleCIに環境変数を設定
 1. CircleCIにログインする。
 2. 左サイドバーの「Projects」をクリックする。
 3. 対象のプロジェクトにある「・・・」をクリックする。
@@ -15,8 +15,8 @@ AWS_ACCESS_KEY_ID
 ### シークレットアクセスキー
 AWS_SECRET_ACCESS_KEY
 
-# CircleCIでスタックをデプロイする手順
-1. 上記の「CircleCIに環境変数を設定する手順」に沿ってスタックをデプロイしたいリージョンを登録する。
+# CircleCIでスタックをデプロイ
+1. 上記の「CircleCIに環境変数を設定」に沿ってスタックをデプロイしたいリージョンを登録する。
 2. スタックを作成するときに必要なポリシーをIAMユーザーにアタッチする。スタックを作成するのでCloudFormationを操作するためのポリシーは必ず必要(例：CloudFormationFullAccessなど)。ここで適切なポリシーがアタッチされたIAMユーザーのアクセスキーとシークレットアクセスキーをCircleCIの環境変数に登録する。
 3. GitHubにリポジトリを作成する。
 4. `git clone [リポジトリのURL]`を実行する。
@@ -170,13 +170,21 @@ CircleCIは`.circleci/config.yml`で出力がない状態が10分を経過する
 ### `requires:`
 このセクション内に書かれた処理が終わったタイミングで`requires:`の一つ上の行の処理が実行される。
 
-# Ansibleのインストール手順
+# Ansibleのインストール
 1. Ubuntuで`sudo apt update`を実行する。
 2. `sudo apt install ansible`を実行する。
 
-# 良く使うコマンド
-## Ansibleプレイブックの構文チェック
+# UbuntuからAnsibleのプレイブックをEC2に対して実行できるようにするための設定
+1. Windowsのエクスプローラーの検索欄に`pem`と入力し、検索する。
+2. pemファイルにカーソルを置いた状態で右クリックからコピーを選択する。
+3. Ubuntuの`/home/[Ubuntuのユーザ名]/`ディレクトリにコピーしたpemファイルを貼り付ける。
+4. Ubuntu上で`chmod 600 /home/[Ubuntuのユーザ名]/[pemのファイル名].pem`を実行する。
+
+# Ansibleで良く使うコマンド
+## Ubuntuからプレイブックの実行
+`ansible-playbook -i [インベントリのファイル名].ini [プレイブックのファイル名].yml --key-file="/home/[ubuntuのユーザ名]/[pemのファイル名].pem"`
+## プレイブックの構文チェック
 `ansible-playbook -i inventry ファイル名.yml --syntax-check`
-## Ansibleプレイブックを実行して上手くいかなかった原因の詳細ログを知りたいとき
+## プレイブックを実行して上手くいかなかった原因の詳細ログを知りたいとき
 `ansible-playbook -i [インベントリのファイル名].ini [プレイブックのファイル名].yml -vvv`
 
