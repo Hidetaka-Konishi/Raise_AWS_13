@@ -193,5 +193,19 @@ CircleCIは`.circleci/config.yml`で出力がない状態が10分を経過する
 `ansible-playbook -i [インベントリのファイル名].ini [プレイブックのファイル名].yml --key-file="/home/[ubuntuのユーザ名]/[pemのファイル名].pem" --ask-vault-pass`
 
 # Ansible Vaultで個人情報を管理する。
-1. `ansible-vault create [ファイル名].yml`を実行して新しい秘密ファイルを作成する。Vaultによって既に暗号化されているファイルを編集するときは`ansible-vault edit [ファイル名].yml`を実行する。
+1. `ansible-vault create [ファイル名].yml`を実行して新しく秘密ファイルを作成する。Vaultによって既に暗号化されているファイルを編集するときは`ansible-vault edit [ファイル名].yml`を実行する。
+2. 秘密ファイルの中で`db_password: "supersecretpassword"`のように変数とパスワードを設定する。
+3. 以下のようにプレイブック内で秘密ファイルの変数を使ってパスワードを参照することができる。`vars_files:`には秘密ファイルのパスを記述する。今回はこのプレイブックと同じディレクトリに`secret.yml`という秘密ファイルが存在するのでパスは`- secret.yml`となる。
 
+```yaml
+# playbook.yml
+---
+- hosts: your_server
+  vars_files:
+    - secret.yml
+  tasks:
+    - name: set db password
+      environment:
+        DB_PASSWORD: "{{ db_password }}"
+
+```
