@@ -193,5 +193,5 @@ CircleCIは`.circleci/config.yml`で出力がない状態が10分を経過する
 `ansible-playbook -i [インベントリのファイル名].ini [プレイブックのファイル名].yml --key-file="/home/[ubuntuのユーザ名]/[pemのファイル名].pem" --ask-vault-pass`
 
 # Ansible Vaultで個人情報を管理する。
-1. `ansible-vault create [ファイル名].yml`を実行して新しい秘密ファイルを作成する。
+1. `ansible-vault create [ファイル名].yml`を実行して新しい秘密ファイルを作成する。Vaultによって既に暗号化されているファイルを編集するときは`ansible-vault edit [ファイル名].yml`を実行する。
 
