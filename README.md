@@ -189,4 +189,5 @@ CircleCIは`.circleci/config.yml`で出力がない状態が10分を経過する
 `ansible-playbook -i [インベントリのファイル名].ini [プレイブックのファイル名].yml -vvv`
 ## Vaultが設定されたプレイブックの構文チェック
 `ansible-playbook -i [インベントリのファイル名].ini [プレイブックのファイル名].yml --syntax-check --ask-vault-pass`
-
+## UbuntuからVaultが設定されたプレイブックの実行
+`ansible-playbook -i [インベントリのファイル名].ini [プレイブックのファイル名].yml --key-file="/home/[ubuntuのユーザ名]/[pemのファイル名].pem" --ask-vault-pass`
