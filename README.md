@@ -180,13 +180,13 @@ CircleCIは`.circleci/config.yml`で出力がない状態が10分を経過する
 3. Ubuntuの`/home/[Ubuntuのユーザ名]/`ディレクトリにコピーしたpemファイルを貼り付ける。
 4. Ubuntu上で`chmod 600 /home/[Ubuntuのユーザ名]/[pemのファイル名].pem`を実行する。
 
-# Ansibleで良く使うコマンド
+# Ansible内で良く使うコマンド
 ## プレイブックの構文チェック
 `ansible-playbook -i [インベントリのファイル名].ini [プレイブックのファイル名].yml --syntax-check`
 ## Ubuntuからプレイブックの実行
 `ansible-playbook -i [インベントリのファイル名].ini [プレイブックのファイル名].yml --key-file="/home/[ubuntuのユーザ名]/[pemのファイル名].pem"`
 ## プレイブックを実行して上手くいかなかった原因の詳細ログを知りたいとき
 `ansible-playbook -i [インベントリのファイル名].ini [プレイブックのファイル名].yml -vvv`
-## Ansible Vaultが設定されたプレイブックの構文チェック
+## Vaultが設定されたプレイブックの構文チェック
 `ansible-playbook -i [インベントリのファイル名].ini [プレイブックのファイル名].yml --syntax-check --ask-vault-pass`
 
