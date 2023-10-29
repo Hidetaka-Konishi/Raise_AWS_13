@@ -266,6 +266,20 @@ workflows:
 3. 「Scope」には「Read Only」を選択し、「Label」ではこのトークンが何の目的で作成したのかが後から見てわかるような名前を記入する。
 4. 「Add API Token」をクリックするとトークンが表示されるのでコピーして安全な場所に保管する。
 
-# プライベートキーの確認方法
+# プライベートキーの確認方法(Windowsの場合)
 1. コマンドプロンプトで`type [`ssh-keygen -t ed25519 -C "your_email@example.com`を実行した後に表示される`Your identification has been saved in`の後に書かれているパス]`を実行する。
-2. 
+2. 例えば以下の①のように表示された場合、②のように書き換えます。①のコードが改行するたびに②のコードで`\n`を記述する
+
+①
+```plaintext
+-----BEGIN OPENSSH PRIVATE KEY-----
+b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAABlwAAAAdzc2gtZW
+...
+Q9w3vSeNZuAmG9FvvF/1VptFjU3kkeBq
+-----END OPENSSH PRIVATE KEY-----
+```
+
+②
+```json
+"private_key": "-----BEGIN OPENSSH PRIVATE KEY-----\nb3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAABlwAAAAdzc2gtZW\n...\nQ9w3vSeNZuAmG9FvvF/1VptFjU3kkeBq\n-----END OPENSSH PRIVATE KEY-----"
+```
