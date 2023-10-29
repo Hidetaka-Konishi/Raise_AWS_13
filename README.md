@@ -248,4 +248,12 @@ workflows:
       ...
 ```
 
+・`your_circleci_token`はCircleCIのアカウントから生成されたトークン。このトークンの作成方法は以下の「CircleCIでトークンを発行」を参考にする。
+
 `add-ssh-key`のジョブは`deploy-ec2`の処理が終わったタイミングで開始されるようにする。
+
+# CircleCIでトークンを発行
+1. CircleCIの対象のプロジェクトの`・・・`から「Project Settings」をクリックする。
+2. 左のサイドバーの「API Permissions」→「Add an API Token」をクリックする。
+3. 「Scope」には「Read Only」を選択し、「Label」ではこのトークンが何の目的で作成したのかが後から見てわかるような名前を記入する。
+4. 「Add API Token」をクリックするとトークンが表示されるのでコピーして安全な場所に保管する。
