@@ -250,7 +250,15 @@ workflows:
 
 ・`your_circleci_token`はCircleCIのアカウントから生成されたトークン。このトークンの作成方法は以下の「CircleCIでトークンを発行」を参考にする。
 
-`add-ssh-key`のジョブは`deploy-ec2`の処理が終わったタイミングで開始されるようにする。
+・`your_circleci_project`はCircleCIの対象のプロジェクト。
+
+・`your_circleci_username`はCircleCIのユーザー名。
+
+・`--stack-name raise13-ec2`の`raise13-ec2`はCloudFormationで作成するEC2のスタック名。
+
+・
+
+・`add-ssh-key`のジョブは`deploy-ec2`の処理が終わったタイミングで開始されるようにする。
 
 # CircleCIでトークンを発行
 1. CircleCIの対象のプロジェクトの`・・・`から「Project Settings」をクリックする。
