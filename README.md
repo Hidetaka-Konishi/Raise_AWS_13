@@ -204,7 +204,7 @@ CircleCIは`.circleci/config.yml`で出力がない状態が10分を経過する
 
 # CircleCIからEC2にSSH接続
 1. EC2のClodFormationテンプレートで0.0.0.0/0からのSSH(22)を許可する。※SSH(22)の0.0.0.0/0の許可はセキュリティリスクが高いためCircleCIのIPアドレスからのSSHを許可するのが望ましいが、今回は学習用ということもあり、あまりお金をかけられなかったのですべてを許可した。
-2. コマンドプロンプトで`ssh-keygen -t ed25519 -C "your_email@example.com"`を実行する。
+2. コマンドプロンプトで`ssh-keygen -t ed25519 -C "your_email@example.com"`を実行する。SSHの情報が表示されるのでコピーして安全な場所に保管する。
 3. `.circleci/config.yml`ファイルで以下のコードを追加する。
 
 ```bash
@@ -256,7 +256,7 @@ workflows:
 
 ・`--stack-name raise13-ec2`の`raise13-ec2`はCloudFormationで作成するEC2のスタック名。
 
-・
+・`-----BEGIN RSA PRIVATE KEY-----\n...\n-----END RSA PRIVATE KEY-----`はSSHのプライベートキー。プライベートキーの参照方法は以下の「プライベートキーの確認方法」を参考にする。
 
 ・`add-ssh-key`のジョブは`deploy-ec2`の処理が終わったタイミングで開始されるようにする。
 
@@ -265,3 +265,7 @@ workflows:
 2. 左のサイドバーの「API Permissions」→「Add an API Token」をクリックする。
 3. 「Scope」には「Read Only」を選択し、「Label」ではこのトークンが何の目的で作成したのかが後から見てわかるような名前を記入する。
 4. 「Add API Token」をクリックするとトークンが表示されるのでコピーして安全な場所に保管する。
+
+# プライベートキーの確認方法
+1. コマンドプロンプトで`type [`ssh-keygen -t ed25519 -C "your_email@example.com`を実行した後に表示される`Your identification has been saved in`の後に書かれているパス]`を実行する。
+2. 
