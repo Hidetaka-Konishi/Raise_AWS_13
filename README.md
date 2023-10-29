@@ -267,7 +267,7 @@ workflows:
 4. 「Add API Token」をクリックするとトークンが表示されるのでコピーして安全な場所に保管する。
 
 # プライベートキーの確認＆設定(Windowsの場合)
-1. コマンドプロンプトで`type [`ssh-keygen -t ed25519 -C "your_email@example.com`を実行した後に表示される`Your identification has been saved in`の後に書かれているパス]`を実行する。
+1. コマンドプロンプトで`type [ssh-keygen -t ed25519 -C "your_email@example.com"を実行した後に表示されるYour identification has been saved inの後に書かれているパス]`を実行する。
 2. 例えば以下の①のように表示された場合、②のように書き換えます。①のコードが改行するたびに②のコードで`\n`を記述する
 
 ①
