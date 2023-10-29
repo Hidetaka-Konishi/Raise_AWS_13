@@ -256,7 +256,7 @@ workflows:
 
 ・`--stack-name raise13-ec2`の`raise13-ec2`はCloudFormationで作成するEC2のスタック名。
 
-・`-----BEGIN RSA PRIVATE KEY-----\n...\n-----END RSA PRIVATE KEY-----`はSSHのプライベートキー。プライベートキーの参照方法は以下の「プライベートキーの確認方法」を参考にする。
+・`-----BEGIN RSA PRIVATE KEY-----\n...\n-----END RSA PRIVATE KEY-----`はSSHのプライベートキー。プライベートキーの設定方法は以下の「プライベートキーの確認＆設定」を参考にする。
 
 ・`add-ssh-key`のジョブは`deploy-ec2`の処理が終わったタイミングで開始されるようにする。
 
@@ -266,7 +266,7 @@ workflows:
 3. 「Scope」には「Read Only」を選択し、「Label」ではこのトークンが何の目的で作成したのかが後から見てわかるような名前を記入する。
 4. 「Add API Token」をクリックするとトークンが表示されるのでコピーして安全な場所に保管する。
 
-# プライベートキーの確認方法(Windowsの場合)
+# プライベートキーの確認＆設定(Windowsの場合)
 1. コマンドプロンプトで`type [`ssh-keygen -t ed25519 -C "your_email@example.com`を実行した後に表示される`Your identification has been saved in`の後に書かれているパス]`を実行する。
 2. 例えば以下の①のように表示された場合、②のように書き換えます。①のコードが改行するたびに②のコードで`\n`を記述する
 
