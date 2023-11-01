@@ -202,44 +202,25 @@ CircleCIは`.circleci/config.yml`で出力がない状態が10分を経過する
 
 ```
 
-# CircleCIからEC2にSSH接続
+# CircleCIからEC2にSSH接続するための準備
 1. EC2のClodFormationテンプレートで`0.0.0.0/0`からのSSH(22)を許可する。※SSH(22)の`0.0.0.0/0`の許可はセキュリティリスクが高いためCircleCIのIPアドレスからのSSHを許可するのが望ましいが、今回は学習用ということもあり、あまりお金をかけられなかったのですべてを許可した。
 2. Windowsのエクスプローラーから`.ssh`ディレクトリ内に`id_ed25519`や`id_ed25519.pub`といったファイルが存在しない時はコマンドプロンプトで`ssh-keygen -t ed25519 -C "your_email@example.com"`を実行する。
-3. マネジメントコンソール上のEC2のページの「キーペア」をクリックして`id_ed25519.pub`の内容を登録したキーペアがなければ以下の「EC2にSSH秘密キーを登録」を参考にして登録する。
-4. GitHubの右上のアイコンから「Settings」→「「SSH And GPG Keys」をクリックする。「SSH keys」の項目で`id_ed25519.pub`を登録していれば完了となる。`id_ed25519.pub`を登録していなければ引き続き手順に従う。
-5. 「New SSH key」をクリックする。
-6. 「Title」は任意の名前を記述し、「Key」には`id_ed25519.pub`のファイルに書かれている内容をすべてコピーして貼り付けて、「Add SSH key」をクリックする。
-7. CircleCIの左側のサイドバーの「Projects」から対象のプロジェクトの「Set UP Project」を「Unfollow Project」の状態にする。対象のプロジェクトにある「・・・」→「Project Settings」をクリックする。
-8. 左側のサイドバーの「SSH Keys」をクリックする。
-9. 一番下までスクロールするして「Add SSH Key」をクリックする。
-10. 「Private Key」に`id_ed25519`のファイルに書かれている内容をすべてコピーして貼り付けて、「Add SSH Key」をクリックする。
-
-# EC2にSSH秘密キーを登録
-1. マネジメントコンソール上のEC2のページの「キーペア」→「アクアション」→「キーペアをインポート」をクリックする。
-2. 任意の名前を記述し、閲覧をクリックするとファイルをアップロードできるので`id_ed25519.pub`ファイルを選択する。
-3. 一番下までスクロールして「キーペアをインポート」をクリックする。
-4. EC2を作成する際にここで作成したキーペアを選択することでEC2にSSH秘密キーを登録できる。
+3. マネジメントコンソール上のEC2のページの「キーペア」をクリックして`id_ed25519.pub`の内容を登録していれば8からの手順を行い、登録していなければ引き続き以下の手順を行う。
+4. マネジメントコンソール上のEC2のページの「キーペア」→「アクアション」→「キーペアをインポート」をクリックする。
+5. 任意の名前を記述し、閲覧をクリックするとファイルをアップロードできるので`id_ed25519.pub`ファイルを選択する。
+6. 一番下までスクロールして「キーペアをインポート」をクリックする。
+7. EC2を作成する際にここで作成したキーペアを選択する
+8. GitHubの右上のアイコンから「Settings」→「SSH And GPG Keys」をクリックする。「SSH keys」の項目で`id_ed25519.pub`を登録していれば完了となり、登録していなければ引き続き以下の手順を行う。
+9. 「New SSH key」をクリックする。
+10. 「Title」は任意の名前を記述し、「Key」には`id_ed25519.pub`のファイルに書かれている内容をすべてコピーして貼り付けて、「Add SSH key」をクリックする。
+11. CircleCIの左側のサイドバーの「Projects」から対象のプロジェクトの「Set UP Project」を「Unfollow Project」の状態にする。
+12. 対象のプロジェクトにある「・・・」→「Project Settings」をクリックする。
+13. 左側のサイドバーの「SSH Keys」をクリックする。
+14. 一番下までスクロールするして「Add SSH Key」をクリックする。
+15. 「Private Key」に`id_ed25519`のファイルに書かれている内容をすべてコピーして貼り付けて、「Add SSH Key」をクリックする。
 
 # CircleCIでトークンを発行
 1. CircleCIの対象のプロジェクトの`・・・`から「Project Settings」をクリックする。
 2. 左のサイドバーの「API Permissions」→「Add an API Token」をクリックする。
 3. 「Scope」には「Read Only」を選択し、「Label」ではこのトークンが何の目的で作成したのかが後から見てわかるような名前を記入する。
 4. 「Add API Token」をクリックするとトークンが表示されるのでコピーして安全な場所に保管する。
-
-# プライベートキーの確認＆設定(Windowsの場合)
-1. コマンドプロンプトで`type [ssh-keygen -t ed25519 -C "your_email@example.com"を実行した後に表示されるYour identification has been saved inの後に書かれているパス]`を実行する。
-2. 例えば以下の①のように表示された場合、②のように書き換えます。①のコードが改行するたびに②のコードで`\n`を記述する。
-
-①
-```plaintext
------BEGIN OPENSSH PRIVATE KEY-----
-b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAABlwAAAAdzc2gtZW
-...
-Q9w3vSeNZuAmG9FvvF/1VptFjU3kkeBq
------END OPENSSH PRIVATE KEY-----
-```
-
-②
-```json
-"private_key": "-----BEGIN OPENSSH PRIVATE KEY-----\nb3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAABlwAAAAdzc2gtZW\n...\nQ9w3vSeNZuAmG9FvvF/1VptFjU3kkeBq\n-----END OPENSSH PRIVATE KEY-----"
-```
