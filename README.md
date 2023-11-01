@@ -204,62 +204,8 @@ CircleCIは`.circleci/config.yml`で出力がない状態が10分を経過する
 
 # CircleCIからEC2にSSH接続
 1. EC2のClodFormationテンプレートで0.0.0.0/0からのSSH(22)を許可する。※SSH(22)の0.0.0.0/0の許可はセキュリティリスクが高いためCircleCIのIPアドレスからのSSHを許可するのが望ましいが、今回は学習用ということもあり、あまりお金をかけられなかったのですべてを許可した。
-2. コマンドプロンプトで`ssh-keygen -t ed25519 -C "your_email@example.com"`を実行する。SSHの情報が表示されるのでコピーして安全な場所に保管する。
-3. `.circleci/config.yml`ファイルで以下のコードを追加する。
-
-```bash
-# 環境変数を設定
-export CIRCLECI_TOKEN=your_circleci_token
-export CIRCLECI_PROJECT=your_circleci_project
-export CIRCLECI_USERNAME=your_circleci_username
-export EC2_PUBLIC_IP=$(aws cloudformation describe-stacks \
-              --stack-name raise13-ec2 \
-              --query 'Stacks[0].Outputs[?OutputKey==`InstancePublicIp`].OutputValue' \
-              --output text)
-
-# CircleCIのAPIを使用してSSHキーを追加
-curl -X POST https://circleci.com/api/v2/project/gh/$CIRCLECI_USERNAME/$CIRCLECI_PROJECT/ssh-key \
-  -H 'Content-Type: application/json' \
-  -H 'Circle-Token: '$CIRCLECI_TOKEN \
-  -d '{
-  "hostname": "'$EC2_PUBLIC_IP'",
-  "private_key": "-----BEGIN RSA PRIVATE KEY-----\n...\n-----END RSA PRIVATE KEY-----"
-}'
-```
-
-```yaml
-  add-ssh-key:
-    executor: my-executor
-    steps:
-      - run:
-          name: Add SSH Key
-          command: |
-            # 上記のスクリプトをここに追加
-  ...
-
-workflows:
-  version: 2
-  deploy:
-    jobs:
-      ...
-      - add-ssh-key:
-          requires:
-            - deploy-ec2
-      ...
-```
-
-・`your_circleci_token`はCircleCIのアカウントから生成されたトークン。このトークンの作成方法は以下の「CircleCIでトークンを発行」を参考にする。
-
-・`your_circleci_project`はCircleCIの対象のプロジェクト。
-
-・`your_circleci_username`はCircleCIのユーザー名。
-
-・`--stack-name raise13-ec2`の`raise13-ec2`はCloudFormationで作成するEC2のスタック名。
-
-・`-----BEGIN RSA PRIVATE KEY-----\n...\n-----END RSA PRIVATE KEY-----`はSSHのプライベートキー。プライベートキーの設定方法は以下の「プライベートキーの確認＆設定」を参考にする。
-
-・`add-ssh-key`のジョブは`deploy-ec2`の処理が終わったタイミングで開始されるようにする。
-
+2. Windowsのエクスプローラーから`.ssh`ディレクトリ内に`id_ed25519`や`id_ed25519.pub`といったファイルが存在しない時はコマンドプロンプトで`ssh-keygen -t ed25519 -C "your_email@example.com"`を実行する。
+3. 
 # CircleCIでトークンを発行
 1. CircleCIの対象のプロジェクトの`・・・`から「Project Settings」をクリックする。
 2. 左のサイドバーの「API Permissions」→「Add an API Token」をクリックする。
