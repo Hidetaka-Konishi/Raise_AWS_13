@@ -206,8 +206,13 @@ CircleCIは`.circleci/config.yml`で出力がない状態が10分を経過する
 1. EC2のClodFormationテンプレートで`0.0.0.0/0`からのSSH(22)を許可する。※SSH(22)の`0.0.0.0/0`の許可はセキュリティリスクが高いためCircleCIのIPアドレスからのSSHを許可するのが望ましいが、今回は学習用ということもあり、あまりお金をかけられなかったのですべてを許可した。
 2. Windowsのエクスプローラーから`.ssh`ディレクトリ内に`id_ed25519`や`id_ed25519.pub`といったファイルが存在しない時はコマンドプロンプトで`ssh-keygen -t ed25519 -C "your_email@example.com"`を実行する。
 3. マネジメントコンソール上のEC2のページの「キーペア」をクリックして`id_ed25519.pub`の内容を登録したキーペアがなければ以下の「EC2にSSH秘密キーを登録」を参考にして登録する。
-4. GitHubの右上のアイコンから「Settings」→「「SSH And GPG Keys」をクリックする。「SSH keys」の項目で`id_ed25519.pub`を登録していなければ
-5. 
+4. GitHubの右上のアイコンから「Settings」→「「SSH And GPG Keys」をクリックする。「SSH keys」の項目で`id_ed25519.pub`を登録していれば完了となる。`id_ed25519.pub`を登録していなければ引き続き手順に従う。
+5. 「New SSH key」をクリックする。
+6. 「Title」は任意の名前を記述し、「Key」には`id_ed25519.pub`のファイルに書かれている内容をすべてコピーして貼り付けて、「Add SSH key」をクリックする。
+7. CircleCIの左側のサイドバーの「Projects」から対象のプロジェクトの「Set UP Project」を「Unfollow Project」の状態にする。対象のプロジェクトにある「・・・」→「Project Settings」をクリックする。
+8. 左側のサイドバーの「SSH Keys」をクリックする。
+9. 一番下までスクロールするして「Add SSH Key」をクリックする。
+10. 「Private Key」に`id_ed25519`のファイルに書かれている内容をすべてコピーして貼り付けて、「Add SSH Key」をクリックする。
 
 # EC2にSSH秘密キーを登録
 1. マネジメントコンソール上のEC2のページの「キーペア」→「アクアション」→「キーペアをインポート」をクリックする。
