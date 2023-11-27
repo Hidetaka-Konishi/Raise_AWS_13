@@ -265,8 +265,12 @@ CircleCIがジョブを実行するための環境であるDockerイメージを
 CloudFormationテンプレートでIAMリソースを作成するために必要なもの。
 ### `no_output_timeout: 30m`
 CircleCIは`.circleci/config.yml`で出力がない状態が10分を経過するとタイムアウトしてしまうので、その期限を30分に設定している。RDSは作成されるまでの時間が長いため10分ではタイムアウトする可能性がある。
+### `$(aws cloudformation describe-stacks \`
+
 ### ```--query 'Stacks[0].Outputs[?OutputKey==`RegionName`].OutputValue' \```
 対象のCloudFormaionテンプレートの`Outputs`で記述した論理IDを指定する。例えば、論理IDが`RegionName`であったら`?OutputKey==`RegionName``のように指定する。
+### `KEY_PAIR_ID=$(aws ec2 describe-key-pairs --filters Name=key-name,Values=$KEY_NAME --query "KeyPairs[*].KeyPairId" --output text)`
+`BASH_ENV`に保存した`$KEY_NAME`を`Values=$KEY_NAME`のようにして指定する。
 ### `workflows:`
 ジョブの連携を定義するセクション。
 ### `version: 2`
