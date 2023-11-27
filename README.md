@@ -23,101 +23,216 @@
 
 # CircleCIからスタックをデプロイする`config.yml`ファイルのコード解説
 ## ソースコード
-```yaml
+```
 version: 2.1
 
 orbs:
-  aws-cli: circleci/aws-cli@4.0
+    aws-cli: circleci/aws-cli@4.0
 
 executors:
-  my-executor:
-    docker:
-      - image: circleci/python:3.10
+    my-executor:
+        docker:
+            - image: circleci/python:3.10
 
 jobs:
-  deploy-vpc:
-    executor: my-executor
-    steps:
-      - checkout
-      - aws-cli/install
-      - run:
-          name: Deploy CloudFormation VPC Stack
-          command: |
-            aws cloudformation deploy \
-              --template-file cloudformation/picture-upload-vpc.yml \
-              --stack-name raise13-vpc \
-              --parameter-overrides Prefix=raise13-vpc
+    deploy-vpc:
+        executor: my-executor
+        steps:
+            - checkout
+            - aws-cli/install
+            - run:
+                  name: Deploy CloudFormation VPC Stack
+                  command: |
+                      aws cloudformation deploy \
+                        --template-file cloudformation/picture-upload-vpc.yml \
+                        --stack-name raise13-vpc \
+                        --parameter-overrides Prefix=raise13 \
+                        --capabilities CAPABILITY_NAMED_IAM
 
-  deploy-ec2:
-    executor: my-executor
-    steps:
-      - checkout
-      - aws-cli/install
-      - run:
-          name: Deploy CloudFormation EC2 Stack
-          command: |
-            aws cloudformation deploy \
-              --template-file cloudformation/picture-upload-ec2.yml \
-              --stack-name raise13-ec2 \
-              --parameter-overrides Prefix=raise13-ec2 VPCPrefix=raise13-vpc
+    deploy-ec2:
+        executor: my-executor
+        steps:
+            - checkout
+            - aws-cli/install
+            - run:
+                  name: Deploy CloudFormation EC2 Stack
+                  command: |
+                      aws cloudformation deploy \
+                        --template-file cloudformation/picture-upload-ec2.yml \
+                        --stack-name raise13-ec2 \
+                        --parameter-overrides Prefix=raise13 \
+                        --capabilities CAPABILITY_NAMED_IAM
 
-  deploy-rds:
-    executor: my-executor
-    steps:
-      - checkout
-      - aws-cli/install
-      - run:
-          name: Deploy CloudFormation RDS Stack
-          command: |
-            aws cloudformation deploy \
-              --template-file cloudformation/picture-upload-rds.yml \
-              --stack-name raise13-rds \
-              --parameter-overrides Prefix=raise13-rds VPCPrefix=raise13-vpc EC2Prefix=raise13-ec2
-          no_output_timeout: 20m
+    deploy-rds:
+        executor: my-executor
+        steps:
+            - checkout
+            - aws-cli/install
+            - run:
+                  name: Deploy CloudFormation RDS Stack
+                  command: |
+                      aws cloudformation deploy \
+                        --template-file cloudformation/picture-upload-rds.yml \
+                        --stack-name raise13-rds \
+                        --parameter-overrides Prefix=raise13 \
+                        --capabilities CAPABILITY_NAMED_IAM
+                  no_output_timeout: 30m
 
-  deploy-alb:
-    executor: my-executor
-    steps:
-      - checkout
-      - aws-cli/install
-      - run:
-          name: Deploy CloudFormation ALB Stack
-          command: |
-            aws cloudformation deploy \
-              --template-file cloudformation/picture-upload-alb.yml \
-              --stack-name raise13-alb \
-              --parameter-overrides Prefix=raise13-alb VPCPrefix=raise13-vpc EC2Prefix=raise13-ec2
+    deploy-alb:
+        executor: my-executor
+        steps:
+            - checkout
+            - aws-cli/install
+            - run:
+                  name: Deploy CloudFormation ALB Stack
+                  command: |
+                      aws cloudformation deploy \
+                        --template-file cloudformation/picture-upload-alb.yml \
+                        --stack-name raise13-alb \
+                        --parameter-overrides Prefix=raise13 \
+                        --capabilities CAPABILITY_NAMED_IAM
 
-  deploy-s3:
-    executor: my-executor
-    steps:
-      - checkout
-      - aws-cli/install
-      - run:
-          name: Deploy CloudFormation S3 Stack
-          command: |
-            aws cloudformation deploy \
-              --template-file cloudformation/picture-upload-s3.yml \
-              --stack-name raise13-s3 \
-              --parameter-overrides Prefix=raise13-s3
+    deploy-s3:
+        executor: my-executor
+        steps:
+            - checkout
+            - aws-cli/install
+            - run:
+                  name: Deploy CloudFormation S3 Stack
+                  command: |
+                      aws cloudformation deploy \
+                        --template-file cloudformation/picture-upload-s3.yml \
+                        --stack-name raise13-s3 \
+                        --parameter-overrides Prefix=raise13 \
+                        --capabilities CAPABILITY_NAMED_IAM
+
+    run-ansible:
+        executor: my-executor
+        steps:
+            - checkout
+            - aws-cli/install
+            - run:
+                  name: Retrieve Region of VPC
+                  command: |
+                      REGION=$(aws cloudformation describe-stacks \
+                        --stack-name raise13-vpc \
+                        --query 'Stacks[0].Outputs[?OutputKey==`RegionName`].OutputValue' \
+                        --output text)
+                      echo "export REGION=$REGION" >> $BASH_ENV
+            - run:
+                  name: Retrieve EC2 Key Pair
+                  command: |
+                      KEY_NAME=$(aws cloudformation describe-stacks \
+                        --stack-name raise13-ec2 \
+                        --query 'Stacks[0].Outputs[?OutputKey==`KeyName`].OutputValue' \
+                        --output text)
+                      echo "export KEY_NAME=$KEY_NAME" >> $BASH_ENV
+            - run:
+                  name: Retrieve Public IP of EC2 Instance
+                  command: |
+                      PUBLIC_IP=$(aws cloudformation describe-stacks \
+                        --stack-name raise13-ec2 \
+                        --query 'Stacks[0].Outputs[?OutputKey==`InstancePublicIp`].OutputValue' \
+                        --output text)
+                      echo "export INSTANCE_PUBLIC_IP=$PUBLIC_IP" >> $BASH_ENV
+            - run:
+                  name: Retrieve RDS ENDPOINT of RDS
+                  command: |
+                      RDS_ENDPOINT=$(aws cloudformation describe-stacks \
+                        --stack-name raise13-rds \
+                        --query 'Stacks[0].Outputs[?OutputKey==`RDSInstanceEndpoint`].OutputValue' \
+                        --output text)
+                      echo "export RDS_ENDPOINT=$RDS_ENDPOINT" >> $BASH_ENV
+            - run:
+                  name: Retrieve ALB DNS Name
+                  command: |
+                      ALB_DNS_NAME=$(aws cloudformation describe-stacks \
+                        --stack-name raise13-alb \
+                        --query 'Stacks[0].Outputs[?OutputKey==`AlbDnsName`].OutputValue' \
+                        --output text)
+                      echo "export ALB_DNS_NAME=$ALB_DNS_NAME" >> $BASH_ENV
+            - run:
+                  name: Retrieve S3 Bucket Name
+                  command: |
+                      S3_BUCKET_NAME=$(aws cloudformation describe-stacks \
+                        --stack-name raise13-s3 \
+                        --query 'Stacks[0].Outputs[?OutputKey==`S3BucketName`].OutputValue' \
+                        --output text)
+                      echo "export S3_BUCKET_NAME=$S3_BUCKET_NAME" >> $BASH_ENV
+            - run:
+                  name: Retrieve Key Pair ID and Get Secret Key from SSM
+                  command: |
+                      KEY_PAIR_ID=$(aws ec2 describe-key-pairs --filters Name=key-name,Values=$KEY_NAME --query "KeyPairs[*].KeyPairId" --output text)
+                      aws ssm get-parameter --name "/ec2/keypair/$KEY_PAIR_ID" --with-decryption --query "Parameter.Value" --output text > new-key-pair.pem
+                      chmod 400 new-key-pair.pem
+            - run:
+                  name: Install Ansible and AWS dependencies
+                  command: pip install ansible boto3 botocore
+            - run:
+                  name: Update Ansible Inventory
+                  command: |
+                      echo "[your_target_host_or_group]" > ansible/inventory.ini
+                      echo "$INSTANCE_PUBLIC_IP ansible_ssh_user=ec2-user" >> ansible/inventory.ini
+                      echo "[your_target_host_or_group:vars]" >> ansible/inventory.ini
+                      echo "rds_endpoint=$RDS_ENDPOINT" >> ansible/inventory.ini
+                      echo "alb_dns_name=$ALB_DNS_NAME" >> ansible/inventory.ini
+                      echo "s3_buket_name=$S3_BUCKET_NAME" >> ansible/inventory.ini
+                      echo "region=$REGION" >> ansible/inventory.ini
+                      echo "ruby_version=3.1.2" >> ansible/inventory.ini
+                      echo "bundler_version=2.3.14" >> ansible/inventory.ini
+                      echo "nvm_version=0.39.5" >> ansible/inventory.ini
+                      echo "nodejs_version=17.9.1" >> ansible/inventory.ini
+            - run:
+                  name: Run Ansible Playbook
+                  command: |
+                      export ANSIBLE_SSH_ARGS='-o StrictHostKeyChecking=no -i new-key-pair.pem'
+                      ansible-playbook -i ansible/inventory.ini ansible/picture_upload_play.yml
+            - run:
+                  name: Setup SSH Config for Serverspec
+                  command: |
+                      mkdir -p ~/.ssh
+                      cat \<< EOS >  ~/.ssh/config
+                      Host raise13-ec2
+                        Hostname $INSTANCE_PUBLIC_IP
+                        User ec2-user
+                        IdentityFile /home/circleci/project/new-key-pair.pem
+                        StrictHostKeyChecking no
+                        IdentitiesOnly yes
+                      EOS
+            - run:
+                  name: install serverspec
+                  command: |
+                      sudo apt-get update
+                      sudo apt-get install -y ruby ruby-dev build-essential
+                      sudo gem install serverspec
+                      sudo gem install ed25519
+                      sudo gem install bcrypt_pbkdf
+            - run:
+                  name: run serverspec
+                  command: |
+                      cd serverspec
+                      rake spec:raise13-ec2
 
 workflows:
-  version: 2
-  deploy:
-    jobs:
-      - deploy-vpc
-      - deploy-ec2:
-          requires:
+    version: 2
+    deploy:
+        jobs:
             - deploy-vpc
-      - deploy-rds:
-          requires:
-            - deploy-ec2
-      - deploy-alb:
-          requires:
-            - deploy-rds
-      - deploy-s3:
-          requires:
-            - deploy-alb
+            - deploy-ec2:
+                  requires:
+                      - deploy-vpc
+            - deploy-rds:
+                  requires:
+                      - deploy-ec2
+            - deploy-alb:
+                  requires:
+                      - deploy-rds
+            - deploy-s3:
+                  requires:
+                      - deploy-alb
+            - run-ansible:
+                  requires:
+                      - deploy-s3
 ```
 
 ## 解説
@@ -146,8 +261,12 @@ CircleCIがジョブを実行するための環境であるDockerイメージを
 
 ### `aws cloudformation deploy \`
 スタックをデプロイすることを定義している。
-### `no_output_timeout: 20m`
-CircleCIは`.circleci/config.yml`で出力がない状態が10分を経過するとタイムアウトしてしまうので、その期限を20分に設定している。RDSは作成されるまでの時間が長いため10分ではタイムアウトする可能性がある。
+### `--capabilities CAPABILITY_NAMED_IAM`
+CloudFormationテンプレートでIAMリソースを作成するために必要なもの。
+### `no_output_timeout: 30m`
+CircleCIは`.circleci/config.yml`で出力がない状態が10分を経過するとタイムアウトしてしまうので、その期限を30分に設定している。RDSは作成されるまでの時間が長いため10分ではタイムアウトする可能性がある。
+### ```--query 'Stacks[0].Outputs[?OutputKey==`RegionName`].OutputValue' \```
+対象のCloudFormaionテンプレートの`Outputs`で記述した論理IDを指定する。例えば、論理IDが`RegionName`であったら`?OutputKey==`RegionName``のように指定する。
 ### `workflows:`
 ジョブの連携を定義するセクション。
 ### `version: 2`
@@ -224,3 +343,5 @@ CircleCIは`.circleci/config.yml`で出力がない状態が10分を経過する
 2. 左のサイドバーの「API Permissions」→「Add an API Token」をクリックする。
 3. 「Scope」には「Read Only」を選択し、「Label」ではこのトークンが何の目的で作成したのかが後から見てわかるような名前を記入する。
 4. 「Add API Token」をクリックするとトークンが表示されるのでコピーして安全な場所に保管する。
+
+# 
