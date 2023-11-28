@@ -21,9 +21,9 @@
 11. `git push origin [ブランチ名]`を実行する。
 12. CircleCIにログインするとスタックが作成中であることが確認できる。
 
-# CircleCIからスタックをデプロイする`config.yml`ファイルのコード解説
-## ソースコード
-```
+# CircleCIの`.circleci/config.yml`
+```yaml
+
 version: 2.1
 
 orbs:
@@ -271,6 +271,10 @@ CircleCIは`.circleci/config.yml`で出力がない状態が10分を経過する
 対象のCloudFormaionテンプレートの`Outputs`で記述した論理IDを指定する。例えば、論理IDが`RegionName`であったら`?OutputKey==`RegionName``のように指定する。
 ### `KEY_PAIR_ID=$(aws ec2 describe-key-pairs --filters Name=key-name,Values=$KEY_NAME --query "KeyPairs[*].KeyPairId" --output text)`
 `$BASH_ENV`に保存した`$KEY_NAME`を`Values=$KEY_NAME`のようにして指定する。
+### `echo "[your_target_host_or_group]" > ansible/inventory.ini`
+`[your_target_host_or_group]`はE2にSSH接続するときに必要な情報を記述するための項目で、Ansibleのインベントリファイルに記述する。
+### `echo "[your_target_host_or_group:vars]" >> ansible/inventory.ini`
+`[your_target_host_or_group:vars]`はAnsibleプレイブック内で使用する変数を定義するための項目。
 ### `workflows:`
 ジョブの連携を定義するセクション。
 ### `version: 2`
@@ -325,6 +329,360 @@ CircleCIは`.circleci/config.yml`で出力がない状態が10分を経過する
 
 ```
 
+# Ansibleプレイブック
+```yaml
+
+---
+- name: Install git on target hosts
+  hosts: your_target_host_or_group
+  become: yes
+
+  tasks:
+      - name: Install git
+        yum:
+            name: git
+            state: present
+
+- name: Remove existing directory and Clone the repository
+  hosts: your_target_host_or_group
+  tasks:
+      - name: Remove existing directory
+        file:
+            path: "/home/ec2-user/raisetech-live8-sample-app"
+            state: absent
+
+      - name: Clone the repository
+        git:
+            repo: "https://github.com/yuta-ushijima/raisetech-live8-sample-app.git"
+            dest: "/home/ec2-user/raisetech-live8-sample-app"
+
+- name: Yum Update Playbook
+  hosts: your_target_host_or_group
+  become: yes
+
+  tasks:
+      - name: Run yum update
+        yum:
+            name: "*"
+            state: latest
+
+- name: Install packages using yum
+  hosts: your_target_host_or_group
+  become: yes
+  tasks:
+      - name: Install curl, gpg, gcc, gcc-c++, make
+        yum:
+            name:
+                - curl
+                - gpg
+                - gcc
+                - gcc-c++
+                - make
+            state: present
+
+- name: Run curl and gpg2 command
+  hosts: your_target_host_or_group
+  tasks:
+      - name: Execute curl command and pipe to gpg2
+        shell: curl -sSL https://rvm.io/mpapis.asc | gpg2 --import -
+
+- name: Git Install Play
+  hosts: your_target_host_or_group
+  become: yes
+  tasks:
+      - name: GPG Key Import
+        shell: curl -sSL https://rvm.io/pkuczynski.asc | gpg2 --import -
+
+- name: Install RVM and Ruby
+  hosts: your_target_host_or_group
+  tasks:
+      - name: Install GPG keys for RVM
+        shell: |
+            gpg2 --keyserver hkp://keyserver.ubuntu.com --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
+        args:
+            executable: /bin/bash
+        ignore_errors: yes
+
+      - name: Install RVM via curl
+        shell: |
+            curl -sSL https://get.rvm.io | bash -s stable
+        args:
+            executable: /bin/bash
+
+      - name: Source RVM in .bashrc
+        lineinfile:
+            path: ~/.bashrc
+            line: "source ~/.rvm/scripts/rvm"
+
+- hosts: your_target_host_or_group
+  tasks:
+      - name: Check if Ruby {{ ruby_version }} is already installed
+        shell: source ~/.rvm/scripts/rvm && rvm list | grep 'ruby-{{ ruby_version }}'
+        args:
+            executable: /bin/bash
+        register: ruby_installed
+        ignore_errors: yes
+
+      - name: Source RVM script and install Ruby {{ ruby_version }}
+        shell: source ~/.rvm/scripts/rvm && rvm install ruby-{{ ruby_version }}
+        args:
+            executable: /bin/bash
+        when: ruby_installed.rc != 0
+
+- name: Install bundler
+  hosts: your_target_host_or_group
+  tasks:
+      - name: Install bundler version {{ bundler_version }}
+        shell: source ~/.rvm/scripts/rvm && gem install bundler -v {{ bundler_version }}
+        args:
+            executable: /bin/bash
+
+- name: Install mysql-devel
+  hosts: your_target_host_or_group
+  become: yes
+
+  tasks:
+      - name: Install mysql-devel package
+        yum:
+            name: mysql-devel
+            state: latest
+
+- name: Bundle install
+  hosts: your_target_host_or_group
+  tasks:
+      - name: bundle install
+        command:
+            cmd: bundle install
+            chdir: /home/ec2-user/raisetech-live8-sample-app
+
+- name: Create MySQL database
+  hosts: your_target_host_or_group
+  vars:
+      ansible_python_interpreter: /usr/bin/python3
+  tasks:
+      - name: Install pip3 if not exists
+        become: true
+        package:
+            name: python3-pip
+            state: present
+
+      - name: Install PyMySQL
+        become: true
+        pip:
+            name: PyMySQL
+
+      - name: Create database
+        mysql_db:
+            name: "Raise13"
+            state: present
+            login_host: "{{ rds_endpoint }}"
+            login_user: "admin"
+            login_password: "{{ lookup('aws_ssm', 'rds_master_password', region=region) }}"
+
+- name: Deploy database.yml from template
+  hosts: your_target_host_or_group
+  vars:
+      database_table_name: "Raise13"
+      database_username: "admin"
+      database_password: "{{ lookup('aws_ssm', 'rds_master_password', region=region) }}"
+      database_endpoint: "{{ rds_endpoint }}"
+      database_port: 3306
+  tasks:
+      - name: Create database.yml from template
+        template:
+            src: templates/database.yml.j2
+            dest: /home/ec2-user/raisetech-live8-sample-app/config/database.yml
+            owner: ec2-user
+            group: ec2-user
+            mode: "0664"
+
+- name: Execute curl command in /home/ec2-user/raisetech-live8-sample-app
+  hosts: your_target_host_or_group
+  tasks:
+      - name: Execute curl command to install nvm
+        shell: |
+            cd /home/ec2-user/raisetech-live8-sample-app
+            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v{{ nvm_version }}/install.sh | bash
+        args:
+            executable: /bin/bash
+
+- name: Set persistent environment variable
+  hosts: your_target_host_or_group
+  tasks:
+      - name: Add export NVM_DIR="$HOME/.nvm" to .bashrc
+        lineinfile:
+            path: /home/ec2-user/.bashrc
+            line: 'export NVM_DIR="$HOME/.nvm"'
+            state: present
+
+- name: Execute command in /home/ec2-user/raisetech-live8-sample-app
+  hosts: your_target_host_or_group
+  tasks:
+      - name: Execute nvm command
+        shell:
+            cmd: '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"'
+            chdir: /home/ec2-user/raisetech-live8-sample-app
+
+- hosts: your_target_host_or_group
+  tasks:
+      - name: Execute nvm install nodejs in specific directory
+        shell: |
+            . ~/.nvm/nvm.sh
+            nvm install {{ nodejs_version }}
+        args:
+            chdir: /home/ec2-user/raisetech-live8-sample-app
+
+- name: A playbook with global environment variables
+  hosts: your_target_host_or_group
+  become: yes
+  tasks:
+      - name: Install yarn globally using nvm
+        become_user: ec2-user
+        shell: |
+            . ~/.nvm/nvm.sh
+            npm install -g yarn
+        environment:
+            PATH: "/home/ec2-user/.nvm/versions/node/v{{ nodejs_version }}/bin:{{ ansible_env.PATH }}"
+
+- name: Install ImageMagick on target hosts
+  hosts: your_target_host_or_group
+  become: yes
+
+  tasks:
+      - name: Install ImageMagick
+        yum:
+            name: ImageMagick
+            state: present
+
+- name: Install nginx on EC2 instances
+  hosts: your_target_host_or_group
+  become: yes
+  tasks:
+      - name: Execute the command to install nginx
+        command:
+            cmd: amazon-linux-extras install nginx1 -y
+            chdir: /home/ec2-user/raisetech-live8-sample-app
+
+- name: Run bundle install in /home/ec2-user/raisetech-live8-sample-app
+  hosts: your_target_host_or_group
+  tasks:
+      - name: Run bundle install
+        command: bundle install
+        args:
+            chdir: /home/ec2-user/raisetech-live8-sample-app
+        become: yes
+        become_user: ec2-user
+
+- name: Change unicorn.rb
+  hosts: your_target_host_or_group
+  tasks:
+      - name: Create unicorn.rb
+        template:
+            src: templates/unicorn.rb.j2
+            dest: /home/ec2-user/raisetech-live8-sample-app/config/unicorn.rb
+            owner: ec2-user
+            group: ec2-user
+            mode: "0664"
+
+- name: Change nginx.conf
+  hosts: your_target_host_or_group
+  become: yes
+  tasks:
+      - name: Create nginx.conf
+        template:
+            src: templates/nginx.conf.j2
+            dest: /etc/nginx/nginx.conf
+            owner: root
+            group: root
+            mode: "0644"
+
+- name: Change strage.yml
+  hosts: your_target_host_or_group
+  become: yes
+  vars:
+      S3_BUKET_NAME: "{{ s3_buket_name }}"
+      REGION: "{{ region }}"
+  tasks:
+      - name: Create strage.yml
+        template:
+            src: templates/storage.yml.j2
+            dest: /home/ec2-user/raisetech-live8-sample-app/config/storage.yml
+            owner: ec2-user
+            group: ec2-user
+            mode: "0664"
+
+- name: Change development.rb
+  hosts: your_target_host_or_group
+  become: yes
+  vars:
+      ALB_DNS_NAME: "{{ alb_dns_name }}"
+  tasks:
+      - name: Create development.rb
+        template:
+            src: templates/development.rb.j2
+            dest: /home/ec2-user/raisetech-live8-sample-app/config/environments/development.rb
+            owner: ec2-user
+            group: ec2-user
+            mode: "0664"
+
+- name: Run RAILS_ENV=development bundle exec rake assets:precompile
+  hosts: your_target_host_or_group
+  tasks:
+      - name: Execute rake assets:precompile
+        shell:
+            cmd: RAILS_ENV=development bundle exec rake assets:precompile
+            chdir: /home/ec2-user/raisetech-live8-sample-app
+
+- name: Rails database migration
+  hosts: your_target_host_or_group
+  become: yes
+  become_user: ec2-user
+  tasks:
+      - name: Check if migrations are needed
+        shell: >
+            cd /home/ec2-user/raisetech-live8-sample-app &&
+            bin/rails runner "exit ActiveRecord::Base.connection.migration_context.needs_migration? ? 1 : 0"
+        environment:
+            RAILS_ENV: development
+        args:
+            executable: /bin/bash
+        register: migrations_needed
+        ignore_errors: yes
+
+      - name: db:migrate run if needed
+        shell: cd /home/ec2-user/raisetech-live8-sample-app && bin/rails db:migrate RAILS_ENV=development
+        environment:
+            RAILS_ENV: development
+        args:
+            executable: /bin/bash
+        when: migrations_needed.rc == 1
+
+- name: Start nginx service
+  hosts: your_target_host_or_group
+  tasks:
+      - name: Ensure nginx is started
+        become: yes
+        command:
+            cmd: systemctl start nginx
+            chdir: /home/ec2-user/raisetech-live8-sample-app
+
+- name: Run Unicorn command on remote server
+  hosts: your_target_host_or_group
+  become: yes
+  become_user: ec2-user
+  tasks:
+      - name: Execute bundle exec unicorn command
+        shell: cd /home/ec2-user/raisetech-live8-sample-app && bundle exec unicorn -c /home/ec2-user/raisetech-live8-sample-app/config/unicorn.rb -E development -D
+```
+## 解説
+### `hosts`
+インベントリファイルに記載しているEC2にSSH接続するための情報が代入された変数を`hosts`で指定する。インベントリファイルには以下のように記載されている。
+
+```
+[your_target_host_or_group]
+[EC2のパブリックIPv4アドレス] ansible_ssh_user=ec2-user
+```
+
 # CircleCIからEC2にSSH接続するための準備
 1. EC2のClodFormationテンプレートで`0.0.0.0/0`からのSSH(22)を許可する。※SSH(22)の`0.0.0.0/0`の許可はセキュリティリスクが高いためCircleCIのIPアドレスからのSSHを許可するのが望ましいが、今回は学習用ということもあり、あまりお金をかけられなかったのですべてを許可した。
 2. Windowsのエクスプローラーから`.ssh`ディレクトリ内に`id_ed25519`や`id_ed25519.pub`といったファイルが存在しない時はコマンドプロンプトで`ssh-keygen -t ed25519 -C "your_email@example.com"`を実行する。
@@ -346,6 +704,4 @@ CircleCIは`.circleci/config.yml`で出力がない状態が10分を経過する
 1. CircleCIの対象のプロジェクトの`・・・`から「Project Settings」をクリックする。
 2. 左のサイドバーの「API Permissions」→「Add an API Token」をクリックする。
 3. 「Scope」には「Read Only」を選択し、「Label」ではこのトークンが何の目的で作成したのかが後から見てわかるような名前を記入する。
-4. 「Add API Token」をクリックするとトークンが表示されるのでコピーして安全な場所に保管する。
-
-# 
+4. 「Add API Token」をクリックするとトークンが表示されるのでコピーして安全な場所に保管する。 
