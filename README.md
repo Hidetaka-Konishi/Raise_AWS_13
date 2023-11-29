@@ -715,7 +715,10 @@ CircleCIは`.circleci/config.yml`で出力がない状態が10分を経過する
 AnsibleがどのPythonのバージョンで処理を行うのかを指示してあげるものであり、`ansible_python_interpreter: /usr/bin/python3`を指示したタスクからプレイブックのコードの最後まで反映される。
 ### `become: true`
 `become: yes`と同じ意味。`become`にはtrue、false、yes、noのいずれかを選択する。
+### ```login_host: "{{ rds_endpoint }}"```
+"{{ インベントリファイルに記述した変数名 }}"とすることでインベントリファイルの変数名に指定した値を参照できる。
 ### ```login_password: "{{ lookup('aws_ssm', 'rds_master_password', region=region) }}"```
+あらかじめSSMパラメータストアに情報を保存しておくと、"{{ lookup('aws_ssm', '[SSMパラメータストアに保存した情報の名前]', region=[リジョン名]) }}"```とすることで保存した情報を使用することができる。インベントリファイルに`region`という変数名でリージョン名を指定しているので`region=region`となっている。
 
 # CircleCIからEC2にSSH接続するための準備
 1. EC2のClodFormationテンプレートで`0.0.0.0/0`からのSSH(22)を許可する。※SSH(22)の`0.0.0.0/0`の許可はセキュリティリスクが高いためCircleCIのIPアドレスからのSSHを許可するのが望ましいが、今回は学習用ということもあり、あまりお金をかけられなかったのですべてを許可した。
