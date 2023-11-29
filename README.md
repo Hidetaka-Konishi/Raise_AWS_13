@@ -706,19 +706,27 @@ CircleCIは`.circleci/config.yml`で出力がない状態が10分を経過する
 ### `ignore_errors`
 `yes`を指定するとタスクでエラーが発生しても、そのタスクのエラーを無視して後続のタスクを処理する。
 ### `lineinfile`
-コンピューターが起動する際に読み込むファイルに設定を書き足すためのもの。今回は`path`に設定されている`.bashrc`というファイルに設定が書き足されている。
+ファイルに文字を書き足すためのもの。今回は`path`に設定されている`.bashrc`というファイルに文字が書き足されている。手動構築の`echo`コマンドの役割を担っている。
 ### `register`
 コマンドの実行結果を保存する役割を持つ。上記では実行結果が保存された`ruby_installed`という変数を使うことで、後続のタスクでもコマンドの実行結果を使用できる。
 ### `when: ruby_installed.rc != 0`
 `when`を使うことで条件分岐が行えるようになり、`rc`にはコマンドの実行が成功したか失敗したかを表す数字が格納されている。コマンドが成功した場合は0、失敗した場合は0以外の数字が格納される。
+### `vars`
+変数に参照させたい値を設定する。
 ### `ansible_python_interpreter: /usr/bin/python3`
 AnsibleがどのPythonのバージョンで処理を行うのかを指示してあげるものであり、`ansible_python_interpreter: /usr/bin/python3`を指示したタスクからプレイブックのコードの最後まで反映される。
 ### `become: true`
 `become: yes`と同じ意味。`become`にはtrue、false、yes、noのいずれかを選択する。
-### ```login_host: "{{ rds_endpoint }}"```
+### `login_host: "{{ rds_endpoint }}"`
 "{{ インベントリファイルに記述した変数名 }}"とすることでインベントリファイルの変数名に指定した値を参照できる。
-### ```login_password: "{{ lookup('aws_ssm', 'rds_master_password', region=region) }}"```
+### `login_password: "{{ lookup('aws_ssm', 'rds_master_password', region=region) }}"`
 あらかじめSSMパラメータストアに情報を保存しておくと、"{{ lookup('aws_ssm', '[SSMパラメータストアに保存した情報の名前]', region=[リジョン名]) }}"```とすることで保存した情報を使用することができる。インベントリファイルに`region`という変数名でリージョン名を指定しているので`region=region`となっている。
+### `database_table_name: "Raise13"`
+タスクの中で指定したj2ファイルの中には`"{{ database_table_name }}"`のように記述しており、このj2ファイルの`database_table_name`変数に`Raise13`という文字列が適用される。
+### `owner`、`group`、`mode`
+`dest`セクションに指定したファイルに対して`ls -l /home/ec2-user/raisetech-live8-sample-app/config/database.yml `のように実行したとき表示されるファイルの実行権限を`owner`、`group`、`mode`に指定する。
+### `become_user: ec2-user`
+上記のプレブックの`A playbook with global environment variables`という処理ではタスクの外に`become: yes`が指定されている。この場合は`A playbook with global environment variables`という処理全体で`become: yes`が反映されるが`Install yarn globally using nvm`というタスクでは指定された`become_user: ec2-user`が反映される。`Run bundle install`というタスクでは`become: yes`と`become_user: ec2-user`の両方を指定している。このように`become: yes`だと必要以上の権限を与えてしまうが、`become_user: ec2-user`だけだと権限が足りないときに`become: yes`と`become_user: ec2-user`を併用する。
 
 # CircleCIからEC2にSSH接続するための準備
 1. EC2のClodFormationテンプレートで`0.0.0.0/0`からのSSH(22)を許可する。※SSH(22)の`0.0.0.0/0`の許可はセキュリティリスクが高いためCircleCIのIPアドレスからのSSHを許可するのが望ましいが、今回は学習用ということもあり、あまりお金をかけられなかったのですべてを許可した。
