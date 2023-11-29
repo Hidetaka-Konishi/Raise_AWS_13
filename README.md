@@ -726,7 +726,9 @@ AnsibleがどのPythonのバージョンで処理を行うのかを指示して�
 ### `owner`、`group`、`mode`
 `dest`セクションに指定したファイルに対して`ls -l /home/ec2-user/raisetech-live8-sample-app/config/database.yml `のように実行したとき表示されるファイルの実行権限を`owner`、`group`、`mode`に指定する。
 ### `become_user: ec2-user`
-上記のプレブックの`A playbook with global environment variables`という処理ではタスクの外に`become: yes`が指定されている。この場合は`A playbook with global environment variables`という処理全体で`become: yes`が反映されるが`Install yarn globally using nvm`というタスクでは指定された`become_user: ec2-user`が反映される。`Run bundle install`というタスクでは`become: yes`と`become_user: ec2-user`の両方を指定している。このように`become: yes`だと必要以上の権限を与えてしまうが、`become_user: ec2-user`だけだと権限が足りないときに`become: yes`と`become_user: ec2-user`を併用する。
+`ec2-user`として実行するための設定。上記のプレブックの`A playbook with global environment variables`という処理ではタスクの外に`become: yes`が指定されている。この場合は`A playbook with global environment variables`という処理全体で`become: yes`が反映されるが`Install yarn globally using nvm`というタスクでは指定された`become_user: ec2-user`が反映される。`Run bundle install`というタスクでは`become: yes`と`become_user: ec2-user`の両方を指定している。このように`become: yes`だと必要以上の権限を与えてしまうが、`become_user: ec2-user`だけだと権限が足りないときに`become: yes`と`become_user: ec2-user`を併用する。
+### `shell: >`
+コマンドを改行して記述しても一つのコマンドとして実行されるようにするためのもの。
 
 # CircleCIからEC2にSSH接続するための準備
 1. EC2のClodFormationテンプレートで`0.0.0.0/0`からのSSH(22)を許可する。※SSH(22)の`0.0.0.0/0`の許可はセキュリティリスクが高いためCircleCIのIPアドレスからのSSHを許可するのが望ましいが、今回は学習用ということもあり、あまりお金をかけられなかったのですべてを許可した。
