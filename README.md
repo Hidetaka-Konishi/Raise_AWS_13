@@ -734,6 +734,47 @@ AnsibleがどのPythonのバージョンで処理を行うのかを指示して�
 ### `bin/rails runner "exit ActiveRecord::Base.connection.migration_context.needs_migration? ? 1 : 0"`
 `bin/rails runner`はプレブックでRubyのコードを実行するためのもの。`exit`ステートメントは`ActiveRecord::Base.connection.migration_context.needs_migration?`によって返される`true`または`false`を1または0に変換するもの。0の場合は成功、1はエラーになる。ただし、`bin/rails runner`によって実行されるRubyのコードのすべてが`true`または`false`を返すわけではない。
 
+# Serverspecの`spec_helper.rb`
+```
+require 'serverspec'
+require 'net/ssh'
+
+set :backend, :ssh
+
+if ENV['ASK_SUDO_PASSWORD']
+  begin
+    require 'highline/import'
+  rescue LoadError
+    fail "highline is not available. Try installing it."
+  end
+  set :sudo_password, ask("Enter sudo password: ") { |q| q.echo = false }
+else
+  set :sudo_password, ENV['SUDO_PASSWORD']
+end
+
+host = ENV['TARGET_HOST']
+
+options = Net::SSH::Config.for(host)
+
+options[:user] ||= 'ec2-user'
+
+set :host,        options[:host_name] || host
+set :ssh_options, options
+
+# Disable sudo
+# set :disable_sudo, true
+
+
+# Set environment variables
+# set :env, :LANG => 'C', :LC_MESSAGES => 'C'
+
+# Set PATH
+# set :path, '/sbin:/usr/local/sbin:$PATH'
+```
+## 解説
+### `options[:user] ||= 'ec2-user'`
+Serverspecがサーバーにアクセスする際にデフォルトで使用するユーザー名を設定する項目。
+
 # CircleCIからEC2にSSH接続するための準備
 1. EC2のClodFormationテンプレートで`0.0.0.0/0`からのSSH(22)を許可する。※SSH(22)の`0.0.0.0/0`の許可はセキュリティリスクが高いためCircleCIのIPアドレスからのSSHを許可するのが望ましいが、今回は学習用ということもあり、あまりお金をかけられなかったのですべてを許可した。
 2. Windowsのエクスプローラーから`.ssh`ディレクトリ内に`id_ed25519`や`id_ed25519.pub`といったファイルが存在しない時はコマンドプロンプトで`ssh-keygen -t ed25519 -C "your_email@example.com"`を実行する。
