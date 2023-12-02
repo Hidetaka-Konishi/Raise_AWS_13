@@ -300,16 +300,16 @@ CircleCIは`.circleci/config.yml`で出力がない状態が10分を経過する
 3. Ubuntuの`/home/[Ubuntuのユーザ名]/`ディレクトリにコピーしたpemファイルを貼り付ける。
 4. Ubuntu上で`chmod 600 /home/[Ubuntuのユーザ名]/[pemのファイル名].pem`を実行する。
 
-# Ansible内で良く使うコマンド
+# Ansibleで良く使うコマンド
 ## プレイブックの構文チェック
 `ansible-playbook -i [インベントリのファイル名].ini [プレイブックのファイル名].yml --syntax-check`
 ## Ubuntuからプレイブックの実行
 `ansible-playbook -i [インベントリのファイル名].ini [プレイブックのファイル名].yml --key-file="/home/[ubuntuのユーザ名]/[pemのファイル名].pem"`
 ## プレイブックを実行して上手くいかなかった原因の詳細ログを知りたいとき
 `ansible-playbook -i [インベントリのファイル名].ini [プレイブックのファイル名].yml -vvv`
-## Vaultが設定されたプレイブックの構文チェック
+## Ansible Vaultが設定されたプレイブックの構文チェック
 `ansible-playbook -i [インベントリのファイル名].ini [プレイブックのファイル名].yml --syntax-check --ask-vault-pass`
-## UbuntuからVaultが設定されたプレイブックの実行
+## UbuntuからAnsible Vaultが設定されたプレイブックの実行
 `ansible-playbook -i [インベントリのファイル名].ini [プレイブックのファイル名].yml --key-file="/home/[ubuntuのユーザ名]/[pemのファイル名].pem" --ask-vault-pass`
 
 # Ansible Vaultで個人情報を管理する。
@@ -318,6 +318,7 @@ CircleCIは`.circleci/config.yml`で出力がない状態が10分を経過する
 3. 以下のようにプレイブック内で秘密ファイルの変数を使ってパスワードを参照することができる。`vars_files:`には秘密ファイルのパスを記述する。今回はこのプレイブックと同じディレクトリに`secret.yml`という秘密ファイルが存在するのでパスは`- secret.yml`となる。
 
 ```yaml
+
 # playbook.yml
 ---
 - hosts: your_server
@@ -777,7 +778,7 @@ set :ssh_options, options
 Serverspecがサーバーにアクセスする際にデフォルトで使用するユーザー名を設定する項目。
 
 # CircleCIからEC2にSSH接続するための準備
-1. EC2のClodFormationテンプレートで`0.0.0.0/0`からのSSH(22)を許可する。※SSH(22)の`0.0.0.0/0`の許可はセキュリティリスクが高いためCircleCIのIPアドレスからのSSHを許可するのが望ましいが、今回は学習用ということもあり、あまりお金をかけられなかったのですべてを許可した。
+1. EC2に関するClodFormationテンプレートで`0.0.0.0/0`からのSSH(22)を許可する。
 2. Windowsのエクスプローラーから`.ssh`ディレクトリ内に`id_ed25519`や`id_ed25519.pub`といったファイルが存在しない時はコマンドプロンプトで`ssh-keygen -t ed25519 -C "your_email@example.com"`を実行する。
 3. マネジメントコンソール上のEC2のページの「キーペア」をクリックして`id_ed25519.pub`の内容を登録していれば8からの手順を行い、登録していなければ引き続き以下の手順を行う。
 4. マネジメントコンソール上のEC2のページの「キーペア」→「アクアション」→「キーペアをインポート」をクリックする。
@@ -790,11 +791,11 @@ Serverspecがサーバーにアクセスする際にデフォルトで使用す�
 11. CircleCIの左側のサイドバーの「Projects」から対象のプロジェクトの「Set UP Project」を「Unfollow Project」の状態にする。
 12. 対象のプロジェクトにある「・・・」→「Project Settings」をクリックする。
 13. 左側のサイドバーの「SSH Keys」をクリックする。
-14. 一番下までスクロールするして「Add SSH Key」をクリックする。
+14. 一番下までスクロールして「Add SSH Key」をクリックする。
 15. 「Private Key」に`id_ed25519`のファイルに書かれている内容をすべてコピーして貼り付けて、「Add SSH Key」をクリックする。
 
 # CircleCIでトークンを発行
-1. CircleCIの対象のプロジェクトの`・・・`から「Project Settings」をクリックする。
+1. CircleCIの対象のプロジェクトの「・・・」→「Project Settings」をクリックする。
 2. 左のサイドバーの「API Permissions」→「Add an API Token」をクリックする。
 3. 「Scope」には「Read Only」を選択し、「Label」ではこのトークンが何の目的で作成したのかが後から見てわかるような名前を記入する。
 4. 「Add API Token」をクリックするとトークンが表示されるのでコピーして安全な場所に保管する。 
