@@ -7,19 +7,20 @@
 6. 「Name」に`AWS_REGION`などを設定し、「Value」に`us-east-1`などを指定する。
 7. 「Add Enviroment Variable」をクリックする。
 
-# CircleCIでスタックをデプロイ
+# CircleCIでAWSのスタックをデプロイ
 1. 上記の「CircleCIに環境変数を設定」に沿ってスタックをデプロイしたいリージョンを登録する。
 2. スタックを作成するときに必要なポリシーをIAMユーザーにアタッチする。スタックを作成するのでCloudFormationを操作するためのポリシーは必ず必要(例：CloudFormationFullAccessなど)。ここで適切なポリシーがアタッチされたIAMユーザーのアクセスキーとシークレットアクセスキーをCircleCIの環境変数に保存する。CircleCIの環境変数に保存しているIAMユーザーにマネジメントコンソール上から追加でポリシーをアタッチすることで即そのポリシーがCircleCIのプロジェクトで反映される。
 3. GitHubにリポジトリを作成する。
 4. `git clone [リポジトリのURL]`を実行する。
 5. `cd [リポジトリ名]`を実行する。
-6. Windowsのエクスプローラーからクローンしたリポジトリのフォルダを開いて、`.circleci/config.yml`を作成する。
-7. 同じくクローンしたリポジトリのフォルダにCloudFomationテンプレートのフォルダとファイルを作成する。
-8. `config.yml`ファイルにCircleCIからスタックをデプロイするためのコードを記述する。
-9. `git add .`を実行する。
-10. `git commit -m "任意のメッセージ"`を実行する。
-11. `git push origin [ブランチ名]`を実行する。
-12. CircleCIにログインするとスタックが作成中であることが確認できる。
+6. `git checkout -b [ブランチ名]`を実行する。
+7. Windowsのエクスプローラーからクローンしたリポジトリのフォルダを開いて、`.circleci/config.yml`を作成する。
+8. 同じくクローンしたリポジトリのフォルダにCloudFormation用のフォルダを作成し、そのフォルダにCloudFormationテンプレートのファイルを作成する。
+9. `config.yml`ファイルにCircleCIからスタックをデプロイするためのコードを記述する。
+10. `git add .`を実行する。
+11. `git commit -m "任意のメッセージ"`を実行する。
+12. `git push origin [ブランチ名]`を実行する。
+13. CircleCIにログインするとスタックが作成中であることが確認できる。
 
 # CircleCIの`.circleci/config.yml`
 ```yaml
@@ -239,9 +240,9 @@ workflows:
 ### `version: 2.1`
 CircleCIの設定ファイルのバージョン
 ### `orbs:`
-特定の機能をインポートするために必要。Pythonでいう`import`のようなもの。
+特定の機能をインポートするために必要なもの。Pythonでいう`import`のようなもの。
 ### `aws-cli: circleci/aws-cli@4.0`
-Pythonでいうライブラリのようなもの。
+CircleCIからAWS CLIを使用するために必要なもの。
 ### `executors:`
 このセクション内に書いた内容をプログラムコードの他の行で再利用可能にしてくれるもの。セクション内で書いた内容を他の行で利用するときは`executors`ではなく、`executor`と書くことに注意する。
 ### `- image: circleci/python:3.10`
@@ -253,14 +254,14 @@ CircleCIがジョブを実行するための環境であるDockerイメージを
 ### `checkout`
 リポジトリのコードを読み取るためのもの。
 ### `aws-cli/install`
-コマンドラインからAWSを操作するために必要なAWS CLIをインストール。
+AWS CLIをインストール。
 ### `name: Deploy CloudFormation VPC Stack`
 以下のようにCircleCI上から確認することができる処理名。自由につけて良い。
 
 ![スクリーンショット 2023-10-14 115427](https://github.com/Hidetaka-Konishi/Raise_AWS_13/assets/142459457/efce98d3-7606-407d-acbd-d6183b71584d)
 
 ### `aws cloudformation deploy \`
-スタックをデプロイすることを定義している。
+スタックをデプロイする処理。
 ### `--capabilities CAPABILITY_NAMED_IAM`
 CloudFormationテンプレートでIAMリソースを作成するために必要なもの。
 ### `no_output_timeout: 30m`
@@ -272,7 +273,7 @@ CircleCIは`.circleci/config.yml`で出力がない状態が10分を経過する
 ### `KEY_PAIR_ID=$(aws ec2 describe-key-pairs --filters Name=key-name,Values=$KEY_NAME --query "KeyPairs[*].KeyPairId" --output text)`
 `$BASH_ENV`に保存した`$KEY_NAME`を`Values=$KEY_NAME`のようにして指定する。
 ### `echo "[your_target_host_or_group]" > ansible/inventory.ini`
-`[your_target_host_or_group]`はE2にSSH接続するときに必要な情報を記述するための項目で、Ansibleのインベントリファイルに記述する。
+`[your_target_host_or_group]`はE2にSSH接続するときに必要な情報を記述するための項目で、`> ansible/inventory.ini`とすることでAnsibleのインベントリファイルに記述することができる。
 ### `echo "[your_target_host_or_group:vars]" >> ansible/inventory.ini`
 `[your_target_host_or_group:vars]`はAnsibleプレイブック内で使用する変数を定義するための項目。
 ### `workflows:`
