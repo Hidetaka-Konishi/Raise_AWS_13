@@ -258,7 +258,7 @@ AWS CLIをインストール。
 ### `name: Deploy CloudFormation VPC Stack`
 以下のようにCircleCI上から確認することができる処理名。自由につけて良い。
 
-![スクリーンショット 2023-10-14 115427](https://github.com/Hidetaka-Konishi/Raise_AWS_13/assets/142459457/efce98d3-7606-407d-acbd-d6183b71584d)
+![](./image/deploy_name.png)
 
 ### `aws cloudformation deploy \`
 スタックをデプロイする処理。
@@ -283,7 +283,7 @@ CircleCIは`.circleci/config.yml`で出力がない状態が10分を経過する
 ### `deploy:`
 以下のようにCircleCI上で表示されるワークフローの名前。自由につけて良い。
 
-![スクリーンショット 2023-10-14 154852](https://github.com/Hidetaka-Konishi/Raise_AWS_13/assets/142459457/a7fce6d8-2fd0-490e-b138-afcbf3b10260)
+![](./image/workflow_name.png)
 
 ### `workflows:`の中の`jobs`
 具体的にジョブがどのように実行されるのかを指定する場所。
